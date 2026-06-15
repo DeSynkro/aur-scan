@@ -1,13 +1,13 @@
 # AUR Security Scanner
 
-Arch Linux has no built-in malware vetting for AUR packages — every PKGBUILD
+Arch Linux has no built-in malware vetting for AUR packages, every PKGBUILD
 is community-contributed and runs with your privileges. This script checks your
 system for known-compromised AUR packages, suspicious PKGBUILDs, malware
 persistence vectors (eBPF, systemd, temp directories), and unusual network
-listeners. All checks are read-only — nothing is modified.
+listeners. All checks are read-only, nothing is modified.
 
 This project was created with assistance from AI (opencode). See the commit
-history and the practical false-positive annotations in the output — those came
+history and the practical false-positive annotations in the output, those came
 from testing on a real Arch system.
 
 ## Quick Start
@@ -44,19 +44,18 @@ the bottom of this file. No data is sent anywhere.
 
 ## Understanding the Output
 
-- `[PASS]` — Everything OK, no action needed
-- `[WARN]` — Caution flag. Each warning has a `[NOTE]` explaining why it's
-  likely safe (e.g., "Shelly AUR helper cache — PKGBUILDs downloaded from AUR
+- `[PASS]` - Everything OK, no action needed
+- `[WARN]` - Caution flag. Each warning has a `[NOTE]` explaining why it's
+  likely safe (e.g., "Shelly AUR helper cache, PKGBUILDs downloaded from AUR
   normally use these commands")
-- `[FAIL]` — Action recommended. Currently only Module 1 produces this, meaning
+- `[FAIL]` - Action recommended. Currently only Module 1 produces this, meaning
   a known-compromised AUR package is installed.
-- `[SKIP]` — A check could not run because an optional tool is not available
-- `[INFO]` / `[NOTE]` — Information for awareness
+- `[SKIP]` - A check could not run because an optional tool is not available
+- `[INFO]` / `[NOTE]` - Information for awareness
 
 ## Dependencies
 
-**Required:** `bash`, `pacman`, `grep`, `find`, `stat`, `date`, `ls`, `cat`,
-`base64`, `gunzip`. All present on a standard Arch installation.
+**Required:** `bash`, `pacman`, `grep`, `find`, `stat`, `date`, `ls`, `cat`. All present on a standard Arch installation.
 
 **Optional:** `expac` (for Module 2 install dates), `bpftool` (for Module 7
 eBPF check), `curl` (for live package-list fetch — skipped with `--no-network`).
