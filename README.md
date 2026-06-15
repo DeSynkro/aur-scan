@@ -33,7 +33,7 @@ the bottom of this file. No data is sent anywhere.
 |---|-------|-------------|
 | 1 | AUR Package Cross-Reference | Matches installed packages against the known-compromised list. The only module that produces a real `[FAIL]`. |
 | 2 | Recently Installed Packages | Shows the 20 newest installs for your awareness. |
-| 3 | PKGBUILD Suspicious Content | Flags risky patterns (curl\|sh, wget\|sh, chmod +x, sudo) in cached PKGBUILDs. Shelly AUR helper caches are annotated as normal — these PKGBUILDs are downloaded from AUR and legitimately use these commands. |
+| 3 | PKGBUILD Suspicious Content | Flags risky patterns (curl\|sh, wget\|sh, chmod +x, sudo) in cached PKGBUILDs. Shelly AUR helper caches are annotated as normal. These PKGBUILDs are downloaded from AUR and legitimately use these commands. |
 | 4 | npm Cache Check | Looks for known malicious npm packages (atomic-lockfile, js-digest, lockfile-js). |
 | 5 | bun Cache Check | Same check in bun's package cache. |
 | 6 | Temp Binaries | Lists executables in /tmp, /var/tmp, /dev/shm. Chromium crash dumps, shared-memory segments, and /tmp/aur-check/ files are annotated as normal. |
@@ -58,7 +58,11 @@ the bottom of this file. No data is sent anywhere.
 **Required:** `bash`, `pacman`, `grep`, `find`, `stat`, `date`, `ls`, `cat`. All present on a standard Arch installation.
 
 **Optional:** `expac` (for Module 2 install dates), `bpftool` (for Module 7
-eBPF check), `curl` (for live package-list fetch — skipped with `--no-network`).
+eBPF check), `curl` (for live package-list fetch, skipped with `--no-network`).
+
+**Package list:** `aur_pkg_list.txt` (sidecar file alongside the script.
+Update it by fetching the latest list from the Arch Linux HedgeDoc:
+`curl -sS https://md.archlinux.org/s/SxbqukK6IA/download > aur_pkg_list.txt`)
 
 ## License
 
