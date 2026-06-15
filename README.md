@@ -22,15 +22,17 @@ sidecar file (`aur_pkg_list.txt`) instead. Run with `--help` to see full module 
 
 ## How It Works
 
-Package list priority: `aur_pkg_list.txt` (sidecar file next to the script)
-then live HedgeDoc fetch. If `--no-network` is set and no sidecar file is
-present, Module 1 skips. No data is sent anywhere.
+Online-first: the script fetches the latest compromised-package list from the
+Arch Linux HedgeDoc on each run (5-second timeout). This is always the most
+up-to-date list. If the fetch fails or `--no-network` is set, it falls back to
+the sidecar file (`aur_pkg_list.txt`) in the same directory, which works fully
+offline, no network needed.
 
 ## Modules
 
 | # | Check | What It Does |
 |---|-------|-------------|
-| 1 | AUR Package Cross-Reference | Matches installed packages against the known-compromised list. The only module that produces a real `[FAIL]`. |
+| 1 | AUR Package Cross-Reference | Matches installed packages against the known-compromised list. The only module that produces a real `[ALERT]`. |
 | 2 | Recently Installed Packages | Shows the 20 newest installs for your awareness. |
 | 3 | PKGBUILD Suspicious Content | Flags risky patterns (curl\|sh, wget\|sh, chmod +x, sudo) in cached PKGBUILDs. Shelly AUR helper caches are annotated as normal. These PKGBUILDs are downloaded from AUR and legitimately use these commands. |
 | 4 | npm Cache Check | Looks for known malicious npm packages (atomic-lockfile, js-digest, lockfile-js). |
@@ -47,7 +49,7 @@ present, Module 1 skips. No data is sent anywhere.
 - `[WARN]` - Caution flag. Each warning has a `[NOTE]` explaining why it's
   likely safe (e.g., "Shelly AUR helper cache, PKGBUILDs downloaded from AUR
   normally use these commands")
-- `[FAIL]` - Action recommended. Currently only Module 1 produces this, meaning
+- `[ALERT]` - Action recommended. Currently only Module 1 produces this, meaning
   a known-compromised AUR package is installed.
 - `[SKIP]` - A check could not run because an optional tool is not available
 - `[INFO]` / `[NOTE]` - Information for awareness

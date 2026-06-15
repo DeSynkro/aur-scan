@@ -1,6 +1,6 @@
 #!/bin/bash
 # aur-scan.sh  -  AUR System Security Scanner
-# Version 1.2  |  Read-Only  |  Offline-First
+# Version 1.2.1  |  Read-Only  |  Online-Preferred
 #
 # Copyright (C) 2026 desynkro
 # SPDX-License-Identifier: GPL-3.0-or-later
@@ -10,7 +10,7 @@
 #
 # Usage:
 #   ./aur-scan.sh                normal scan (fetches live list, 5s timeout)
-#   ./aur-scan.sh --no-network   offline only (skips HedgeDoc fetch)
+#   ./aur-scan.sh --no-network   offline mode (uses sidecar file, no network needed)
 #   ./aur-scan.sh --help         this message
 #
 # Modules:
@@ -51,7 +51,7 @@ KNOWN_NPM_MALICIOUS=("atomic-lockfile" "js-digest" "lockfile-js")
 NO_NETWORK=0
 
 # --- Counters for the end-of-run summary ---
-PASS_COUNT=0; WARN_COUNT=0; FAIL_COUNT=0; SKIP_COUNT=0
+PASS_COUNT=0; WARN_COUNT=0; ALERT_COUNT=0; SKIP_COUNT=0
 
 # --- Colors ---
 RST='\033[0m'
@@ -64,7 +64,7 @@ CYN='\033[0;36m'
 # --- Output helpers ---
 pass() { ((PASS_COUNT++)); printf " ${GRN}[PASS]${RST} %s\n" "$1"; }
 warn() { ((WARN_COUNT++)); printf " ${YEL}[WARN]${RST} %s\n" "$1"; }
-fail() { ((FAIL_COUNT++)); printf " ${RED}[FAIL]${RST} %s\n" "$1"; }
+alert() { ((ALERT_COUNT++)); printf " ${RED}[ALERT]${RST} %s\n" "$1"; }
 skip() { ((SKIP_COUNT++)); printf " ${BLU}[SKIP]${RST} %s\n" "$1"; }
 info() { printf " ${CYN}[INFO]${RST} %s\n" "$1"; }
 note() { printf " ${CYN}[NOTE]${RST} %s\n" "$1"; }
@@ -79,20 +79,14 @@ for cmd in pacman grep stat date ls cat find; do
 done
 
 # --- Package list sources ---
-# Priority: aur_pkg_list.txt (sidecar) > live HedgeDoc fetch.
+# Priority: live HedgeDoc fetch > aur_pkg_list.txt (sidecar).
 
 
 # --- Functions ---
 
 # Load the known-compromised package list.
-# Priority: sidecar file > live HedgeDoc fetch.
+# Priority: live HedgeDoc fetch > sidecar file.
 load_package_list() {
-    local sidecar
-    sidecar="$(dirname "$0")/aur_pkg_list.txt"
-    if [[ -f "$sidecar" ]]; then
-        cat "$sidecar"
-        return 0
-    fi
     local pkglist
     if [[ $NO_NETWORK -eq 0 ]] && command -v curl &>/dev/null; then
         pkglist=$(curl -sS --connect-timeout 3 --max-time "$HELP_DOC_TIMEOUT" "$HELP_DOC_URL" 2>/dev/null)
@@ -101,11 +95,17 @@ load_package_list() {
             return 0
         fi
     fi
+    local sidecar
+    sidecar="$(dirname "$0")/aur_pkg_list.txt"
+    if [[ -f "$sidecar" ]]; then
+        cat "$sidecar"
+        return 0
+    fi
     return 1
 }
 
 # Module 1: Match installed packages against the known-compromised AUR list.
-# This is the only module that can produce a real [FAIL].
+# This is the only module that can produce a real [ALERT].
 module_aur_xref() {
     echo -e "\n${CYN}═══ Module 1: AUR Package Cross-Reference ═══${RST}"
     local pkglist
@@ -123,7 +123,7 @@ module_aur_xref() {
     matched=$(grep -Fx -f <(echo "$pkglist") <<< "$installed" 2>/dev/null)
     if [[ -n "$matched" ]]; then
         while IFS= read -r pkg; do
-            fail "Installed compromised package: $pkg"
+            alert "Installed compromised package: $pkg"
         done <<< "$matched"
     else
         pass "No known compromised packages installed"
@@ -203,7 +203,7 @@ module_npm_cache() {
     local found=0
     for pkg in "${KNOWN_NPM_MALICIOUS[@]}"; do
         if grep -rqil --max-count=1 "$pkg" "$npm_root" 2>/dev/null | grep -q .; then
-            fail "Known malicious npm package found in cache: $pkg"
+            alert "Known malicious npm package found in cache: $pkg"
             found=1
         fi
     done
@@ -223,7 +223,7 @@ module_bun_cache() {
     local found=0
     for pkg in "${KNOWN_NPM_MALICIOUS[@]}"; do
         if find "$bun_cache" -maxdepth 1 -name "*${pkg}*" 2>/dev/null | grep -q .; then
-            fail "Known malicious package found in bun cache: $pkg"
+            alert "Known malicious package found in bun cache: $pkg"
             found=1
         fi
     done
@@ -404,7 +404,7 @@ for arg in "$@"; do
 done
 
 echo -e "${CYN}╔══════════════════════════════════════════════════╗${RST}"
-echo -e "${CYN}║     AUR System Security Scanner v1.2            ║${RST}"
+echo -e "${CYN}║     AUR System Security Scanner v1.2.1          ║${RST}"
 echo -e "${CYN}║     Read-Only Mode  |  10 Check Modules         ║${RST}"
 echo -e "${CYN}╚══════════════════════════════════════════════════╝${RST}"
 echo -e " Scan started: $(date '+%Y-%m-%d %H:%M:%S')"
@@ -427,15 +427,15 @@ echo -e " ${GRN}[PASS]${RST}  Everything OK. No action needed"
 echo -e " ${CYN}[INFO]${RST}  Information for your awareness"
 echo -e " ${CYN}[NOTE]${RST}  Explanation of a specific finding above"
 echo -e " ${YEL}[WARN]${RST}  Caution flag. Read the [NOTE] explanation; usually benign"
-echo -e " ${RED}[FAIL]${RST}  Action recommended. A compromised package was found"
+echo -e " ${RED}[ALERT]${RST}  Action recommended. A compromised package was found"
 echo -e " ${BLU}[SKIP]${RST}  A check could not run (optional tool not installed)"
 echo -e ""
-echo -e " Only Module 1 (AUR Cross-Reference) produces a real ${RED}[FAIL]${RST}."
+echo -e " Only Module 1 (AUR Cross-Reference) produces a real ${RED}[ALERT]${RST}."
 echo -e " The ${YEL}[WARN]${RST} results are caution flags. Each has a ${CYN}[NOTE]${RST} explaining why it's likely safe."
 echo -e " If you are still unsure, ask the Arch Linux community or open an issue."
 
 echo -e "\n${CYN}═══ Scan Complete ═══${RST}"
-echo -e " ${GRN}PASS: ${PASS_COUNT}${RST}  ${YEL}WARN: ${WARN_COUNT}${RST}  ${RED}FAIL: ${FAIL_COUNT}${RST}  ${BLU}SKIP: ${SKIP_COUNT}${RST}"
+echo -e " ${GRN}PASS: ${PASS_COUNT}${RST}  ${YEL}WARN: ${WARN_COUNT}${RST}  ${RED}ALERT: ${ALERT_COUNT}${RST}  ${BLU}SKIP: ${SKIP_COUNT}${RST}"
 echo -e " Scan finished: $(date '+%Y-%m-%d %H:%M:%S')"
 exit 0
 

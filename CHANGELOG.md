@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.2.1 — 2026-06-15
+
+### Changed
+- HedgeDoc fetch now takes priority over the sidecar file (online-first).
+- `[FAIL]` marker upgraded to `[ALERT]` for compromised packages.
+- Tagline changed from Offline-First to Online-Preferred.
+
 ## v1.2 — 2026-06-15
 
 ### Removed
