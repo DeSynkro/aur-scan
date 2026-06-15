@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.2 — 2026-06-15
+
+### Removed
+- Embedded package list (1936 names) from the bottom of aur-scan.sh.
+  Script now relies solely on the sidecar file (aur_pkg_list.txt) and
+  live HedgeDoc fetch. Single-file offline use requires the sidecar.
+
+### Changed
+- References to "embedded fallback" replaced with "sidecar" throughout.
+
 ## v1.1 — 2026-06-15
 
 ### Added

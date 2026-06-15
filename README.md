@@ -18,14 +18,13 @@ chmod +x aur-scan.sh
 ```
 
 Run with `--no-network` to skip the live package-list fetch and use the
-embedded copy only. Run with `--help` to see full module descriptions.
+sidecar file (`aur_pkg_list.txt`) instead. Run with `--help` to see full module descriptions.
 
 ## How It Works
 
-The online reference list (1936 known-malicious AUR package names) is fetched
-from the Arch Linux HedgeDoc with a 5-second timeout. If the fetch fails or
-`--no-network` is set, the script falls back to the embedded plain-text list at
-the bottom of this file. No data is sent anywhere.
+Package list priority: `aur_pkg_list.txt` (sidecar file next to the script)
+then live HedgeDoc fetch. If `--no-network` is set and no sidecar file is
+present, Module 1 skips. No data is sent anywhere.
 
 ## Modules
 
